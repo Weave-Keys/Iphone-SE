@@ -1,0 +1,242 @@
+<html><head><base href="https://discord.webhook.spammer"><title>Discord Webhook Spammer</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@3.1.0/dist/full.css" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      transition: background-color 0.3s ease; /* Add transition for smooth theme change */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100%;
+      padding: 20px;
+      animation: fadeIn 0.5s ease-in-out; /* Add fade-in animation */
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .input-group {
+      width: 100%;
+      max-width: 300px;
+      margin-bottom: 10px;
+      animation: slideIn 0.5s ease-in-out; /* Add slide-in animation */
+    }
+    @keyframes slideIn {
+      from { transform: translateX(-20px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .input-group input {
+      color: #fff;
+      background-color: #36393f;
+      padding: 10px;
+      border: 1px solid #4f545c;
+      border-radius: 5px;
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease; /* Add transition for smooth theme change */
+    }
+    .button {
+      background-color: #5865f2;
+      cursor: pointer;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      transition: background-color 0.3s ease; /* Add transition for smooth theme change */
+      animation: scaleIn 0.5s ease-in-out; /* Add scale-in animation */
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .button:hover {
+      background-color: #4f545c;
+    }
+    .button:active {
+      background-color: #000;
+    }
+    .error-message, .success-message {
+      margin-top: 5px;
+      font-size: 12px;
+      text-align: center;
+      animation: slideIn 0.5s ease-in-out; /* Add slide-in animation */
+    }
+    .error-message {
+      color: #f04747;
+    }
+    .success-message {
+      color: #43b581;
+    }
+    .loader {
+      border: 8px solid #f3f3f3;
+      border-radius: 50%;
+      border-top: 8px solid #3498db;
+      width: 40px;
+      height: 40px;
+      animation: spin 2s linear infinite;
+      display: none;
+    }
+    .settings-button {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10;
+      cursor: pointer;
+    }
+    .settings-menu {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: #242526;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      transform: scale(0);
+      transition: transform 0.3s ease-in-out;
+      z-index: 20;
+    }
+    .settings-menu.active {
+      transform: scale(1);
+    }
+    .settings-menu label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    .settings-menu select {
+      width: 100%;
+      padding: 5px;
+      border: 1px solid #4f545c;
+      border-radius: 5px;
+      background-color: #36393f;
+      color: white;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container">
+    <h1 class="text-3xl font-bold mb-4">Discord Webhook Spammer</h1>
+    <div class="input-group">
+      <input type="text" v-model="webhookUrl" placeholder="Webhook URL">
+    </div>
+    <div class="input-group">
+      <input type="text" v-model="message" placeholder="Message">
+    </div>
+    <div class="input-group">
+      <input type="number" v-model="delay" min="0" placeholder="Delay (ms)">
+    </div>
+    <div class="input-group">
+      <input type="number" v-model="count" min="0" placeholder="Count">
+    </div>
+    <button class="button" @click="spam">
+      Spam
+    </button>
+    <div v-show="errorMessage" class="error-message">{{ errorMessage }}</div>
+    <div v-show="successMessage" class="success-message">{{ successMessage }}</div>
+    <div v-show="isLoading" class="loader"></div>
+    <span class="settings-button" @click="showSettings = !showSettings">
+      <i class="material-icons">settings</i>
+    </span>
+    <div :class="{ active: showSettings }" class="settings-menu">
+      <label for="theme-select">Theme:</label>
+      <select id="theme-select" v-model="selectedTheme">
+        <option value="dark">Dark</option>
+        <option value="pink">Pink</option>
+      </select>
+    </div>
+  </div>
+
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          webhookUrl: '',
+          message: '',
+          delay: 0,
+          count: 0,
+          errorMessage: null,
+          successMessage: null,
+          isLoading: false,
+          showSettings: false,
+          selectedTheme: 'dark',
+          themes: {
+            dark: {
+              backgroundColor: '#242526',
+              inputBackgroundColor: '#36393f',
+              inputBorderColor: '#4f545c',
+              buttonBackgroundColor: '#5865f2',
+              buttonHoverBackgroundColor: '#4f545c',
+              textColor: '#fff',
+              errorMessageColor: '#f04747',
+              successMessageColor: '#43b581',
+            },
+            pink: {
+              backgroundColor: '#f8d7da',
+              inputBackgroundColor: '#fff',
+              inputBorderColor: '#f5c6cb',
+              buttonBackgroundColor: '#dc3545',
+              buttonHoverBackgroundColor: '#c82333',
+              textColor: '#343a40',
+              errorMessageColor: '#dc3545',
+              successMessageColor: '#28a745',
+            },
+          },
+        };
+      },
+      computed: {
+        currentTheme() {
+          return this.themes[this.selectedTheme];
+        },
+      },
+      watch: {
+        selectedTheme() {
+          this.applyTheme();
+        },
+      },
+      mounted() {
+        this.applyTheme();
+      },
+      methods: {
+        applyTheme() {
+          document.body.style.backgroundColor = this.currentTheme.backgroundColor;
+          document.querySelectorAll('input').forEach(input => {
+            input.style.backgroundColor = this.currentTheme.inputBackgroundColor;
+            input.style.borderColor = this.currentTheme.inputBorderColor;
+            input.style.color = this.currentTheme.textColor;
+          });
+          document.querySelectorAll('.button').forEach(button => {
+            button.style.backgroundColor = this.currentTheme.buttonBackgroundColor;
+          });
+          document.querySelectorAll('.button:hover').forEach(button => {
+            button.style.backgroundColor = this.currentTheme.buttonHoverBackgroundColor;
+          });
+          document.querySelectorAll('.error-message').forEach(message => {
+            message.style.color = this.currentTheme.errorMessageColor;
+          });
+          document.querySelectorAll('.success-message').forEach(message => {
+            message.style.color = this.currentTheme.successMessageColor;
+          });
+        },
+        async spam() {
+          // ... (rest of your spam method remains the same)
+        },
+        async sendMessage() {
+          // ... (rest of your sendMessage method remains the same)
+        },
+      },
+    });
+  </script>
+</body></html>
